@@ -1,0 +1,16 @@
+sources:
+  - name: Reuters Markets
+    url: https://feeds.reuters.com/reuters/marketsNews
+    lang: en
+  - name: WSJ Markets
+    url: https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+    lang: en
+  - name: 한국경제 증권
+    url: https://rss.hankyung.com/feed/stock.xml
+    lang: ko
+  - name: 매일경제 증권
+    url: https://file.mk.co.kr/news/rss/rss_09.xml
+    lang: ko
+  - name: 연합뉴스 경제
+    url: https://www.yna.co.kr/rss/economy.xml
+    lang: ko
