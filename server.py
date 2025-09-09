@@ -182,8 +182,12 @@ def _yahoo_options_chain(symbol: str, expiration: Optional[str] = None) -> dict:
             params["date"] = int(dt.timestamp())
         except Exception:
             pass
-    r = _http_get(base, params=params, timeout=30)
-    return r.json()
+    try:
+        r = _http_get(base, params=params, timeout=30)
+        return r.json()
+    except Exception as e:
+        logger.exception("options chain fetch failed for %s", symbol)
+        return {"error": str(e), "symbol": symbol}
 
 
 def _load_feeds() -> List[dict]:
@@ -682,7 +686,12 @@ def stock_prices(args: StockArgs) -> dict:
 
 @app.tool()
 def options_chain(args: OptionsArgs) -> dict:
-    return _yahoo_options_chain(args.symbol, args.expiration)
+    data = _yahoo_options_chain(args.symbol, args.expiration)
+    if data.get("error"):
+        _audit("options_chain", inputs=args.model_dump(), error=data["error"])
+    else:
+        _audit("options_chain", inputs=args.model_dump(), result=data)
+    return data
 
 
 @app.tool()
