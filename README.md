@@ -1,4 +1,4 @@
-﻿# Finance News MCP
+# Finance News MCP
 
 MCP server exposing finance/news tools: RSS aggregation, Yahoo Finance charts, FRED/ECOS macro, and OpenDART filings.
 
@@ -22,7 +22,7 @@ MCP server exposing finance/news tools: RSS aggregation, Yahoo Finance charts, F
   python web/app.py
   ```
 - Open http://127.0.0.1:8000 in your browser.
-- Click preset buttons (肄붿뒪???섏뒪??湲濡쒕쾶) for quick summaries, or use the category + keyword search to analyze a specific market (e.g., 而ㅽ뵾/?щ윭???쇱꽦?꾩옄).
+- Click preset buttons (코스피, 코스닥, 글로벌) for quick summaries, or use the category + keyword search to analyze a specific market (e.g., 커피/환율/삼성전자).
 
 Notes:
 - The server uses retries and short-lived caching (requests-cache, ~180s) for resilience.
@@ -37,10 +37,10 @@ Notes:
 - run_query: Guided category flow (`commodity`|`company`|`news`|`dart`|`fred`|`ecos`)
   - Args: `{ mode: 'commodity'|'company'|'news'|'dart'|'fred'|'ecos', keyword?: string, company_symbol?: string, range?: string, interval?: string, limit?: number }`
   - Examples:
-    - `run_query { mode: 'commodity', keyword: '而ㅽ뵾', range: '1mo', interval: '1d' }` ??KC=F
-    - `run_query { mode: 'company', keyword: '?쇱꽦?꾩옄', range: '1mo' }` ??005930.KS
-    - `run_query { mode: 'news', keyword: '諛섎룄泥?, limit: 10 }`
-    - `run_query { mode: 'dart', keyword: '?쇱꽦?꾩옄', limit: 10 }`
+    - `run_query { mode: 'commodity', keyword: '커피', range: '1mo', interval: '1d' }` → KC=F
+    - `run_query { mode: 'company', keyword: '삼성전자', range: '1mo' }` → 005930.KS
+    - `run_query { mode: 'news', keyword: '반도체', limit: 10 }`
+    - `run_query { mode: 'dart', keyword: '삼성전자', limit: 10 }`
     - `run_query { mode: 'fred', keyword: 'DGS10,CPIAUCSL' }`
     - `run_query { mode: 'ecos', keyword: 'STAT_CODE ITEM1', }`
 - regulator_news: FSS/FSC press/news via Google News RSS
@@ -53,10 +53,10 @@ Notes:
   - Args: `{ positions: { symbol: string, weight: number }[], range?: string, interval?: string }`
 - discover_market: Resolve keywords to symbols (commodities/FX/indices/equities)
   - Args: `{ category?: 'commodity'|'fx'|'index'|'equity'|'auto', keyword: string, limit?: number }`
-  - Example: `discover_market { category: 'commodity', keyword: '而ㅽ뵾' }` ??`KC=F`
+  - Example: `discover_market { category: 'commodity', keyword: '커피' }` → `KC=F`
 - analyze_keyword: One-shot: discover symbol by keyword and analyze chart trend
   - Args: `{ category?: string, keyword: string, range?: string, interval?: string }`
-  - Example: `analyze_keyword { category: 'fx', keyword: '?щ윭??, range: '1mo' }`
+  - Example: `analyze_keyword { category: 'fx', keyword: '원/달러', range: '1mo' }`
 
 ## Macro/Markets
 - market_quotes: Multi-asset Yahoo time series (indices/FX/commodities/futures)
@@ -115,11 +115,11 @@ Notes:
   - Args: `{ range?: string, interval?: string, equities?: string[], include_vix?: boolean, rates_source?: 'fred'|'yahoo', fred_series?: string[], company_symbol?: string, company_name?: string, filings_days?: number, include_fx?: boolean, include_commodities?: boolean, fx_symbols?: string[], commodity_symbols?: string[] }`
   - Examples:
     - `analyze_markets { range: "1mo", equities: ["^GSPC","^NDX","^KS11"], include_vix: true }`
-    - `analyze_markets { range: "1mo", company_symbol: "005930.KS", company_name: "?쇱꽦?꾩옄", filings_days: 14 }`
+    - `analyze_markets { range: "1mo", company_symbol: "005930.KS", company_name: "삼성전자", filings_days: 14 }`
   - Notes: For FRED yields, set `FRED_API_KEY`. DART filings need `DART_API_KEY`.
 - analyze_company: Company-focused interpretation (price + filings + news + regulator mentions)
   - Args: `{ company_symbol: string, company_name?: string, range?: string, interval?: string, news_limit?: number, filings_days?: number, include_regulator_news?: boolean }`
-  - Example: `analyze_company { company_symbol: "005930.KS", company_name: "?쇱꽦?꾩옄", range: "1mo" }`
+  - Example: `analyze_company { company_symbol: "005930.KS", company_name: "삼성전자", range: "1mo" }`
   - Behavior: Works without API keys; will fallback (e.g., DART -> news) and annotate warnings.
 
 ### Env vars
@@ -134,10 +134,10 @@ Notes:
 
 ## Examples
 - FSC press 10: `regulator_news { org: "fsc", limit: 10 }`
-- Samsung Electronics filings: `dart_filings { corp_name: "?쇱꽦?꾩옄", page_count: 20 }`
+- Samsung Electronics filings: `dart_filings { corp_name: "삼성전자", page_count: 20 }`
 - Samsung Electronics 1mo daily: `stock_prices { symbol: "005930.KS", range: "1mo", interval: "1d" }`
-- summary_kr / summary_us / summary_global: One?멵lick preset market summaries (Claude Desktop?먯꽌 踰꾪듉 ???
+- summary_kr / summary_us / summary_global: One-click preset market summaries (click the button in Claude Desktop)
   - Args: `{ range?: string, interval?: string }`
-- commodity_coffee / commodity_wti / commodity_gold / commodity_copper: One?멵lick commodity analysis presets
+- commodity_coffee / commodity_wti / commodity_gold / commodity_copper: One-click commodity analysis presets
   - Args: `{ range?: string, interval?: string }`
 
