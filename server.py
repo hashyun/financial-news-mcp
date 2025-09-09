@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 from pydantic import BaseModel, Field
 from mcp.server.fastmcp import FastMCP
+from config import COMMODITY_MAP, FX_ALIAS, INDEX_MAP, EQUITY_MAP
 
 try:
     from dotenv import load_dotenv  # type: ignore
@@ -86,55 +87,6 @@ def _audit(tool: str, inputs: Dict[str, Any], result: Optional[Dict[str, Any]] =
     except Exception:
         logger.debug("audit logging failed", exc_info=True)
 
-
-def _lower_keys(d: Dict[str, str]) -> Dict[str, str]:
-    return { (k or "").strip().lower(): v for k, v in d.items() }
-
-
-COMMODITY_MAP = _lower_keys({
-    "coffee": "KC=F", "커피": "KC=F",
-    "wti": "CL=F", "oil": "CL=F", "원유": "CL=F",
-    "brent": "BZ=F", "브렌트": "BZ=F", "브렌트유": "BZ=F",
-    "gold": "GC=F", "금": "GC=F",
-    "silver": "SI=F", "은": "SI=F",
-    "copper": "HG=F", "구리": "HG=F",
-    "natgas": "NG=F", "lng": "NG=F", "천연가스": "NG=F",
-    "gasoline": "RB=F", "휘발유": "RB=F",
-    "corn": "ZC=F", "옥수수": "ZC=F",
-    "soybean": "ZS=F", "대두": "ZS=F",
-    "wheat": "ZW=F", "밀": "ZW=F",
-    "sugar": "SB=F", "설탕": "SB=F",
-    "cocoa": "CC=F", "코코아": "CC=F",
-})
-
-FX_ALIAS = _lower_keys({
-    "dxy": "DX=F", "달러지수": "DX=F", "달러인덱스": "DX=F",
-    "eurusd": "EURUSD=X", "유로달러": "EURUSD=X", "유로/달러": "EURUSD=X",
-    "usdjpy": "JPY=X", "달러엔": "JPY=X", "엔화": "JPY=X",
-    "usdkrw": "KRW=X", "달러원": "KRW=X", "달러/원": "KRW=X", "원화": "KRW=X", "krw": "KRW=X",
-})
-
-INDEX_MAP = _lower_keys({
-    "s&p": "^GSPC", "spx": "^GSPC", "s&p500": "^GSPC", "sp500": "^GSPC",
-    "nasdaq100": "^NDX", "ndx": "^NDX", "나스닥100": "^NDX",
-    "dow": "^DJI", "djia": "^DJI", "다우": "^DJI",
-    "kospi": "^KS11", "코스피": "^KS11",
-    "kospi200": "^KS200", "코스피200": "^KS200",
-    "vix": "^VIX",
-})
-
-EQUITY_MAP: Dict[str, str] = _lower_keys({
-    "삼성전자": "005930.KS",
-    "삼성전자우": "005935.KS",
-    "현대차": "005380.KS",
-    "lg에너지솔루션": "373220.KS",
-    "네이버": "035420.KS",
-    "카카오": "035720.KS",
-    "sk하이닉스": "000660.KS",
-    "apple": "AAPL",
-    "tesla": "TSLA",
-    "microsoft": "MSFT",
-})
 
 
 def _normalize_kw(s: str) -> str:
