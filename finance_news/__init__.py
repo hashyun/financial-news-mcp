@@ -8,6 +8,8 @@ from .data_sources import (
     EQUITY_MAP,
     _fetch_yahoo_chart,
     _yahoo_options_chain,
+    _google_news_rss,
+    _normalize_article,
     _news_all,
 )
 from .tools import app
@@ -22,5 +24,7 @@ __all__ = [
     "EQUITY_MAP",
     "_fetch_yahoo_chart",
     "_yahoo_options_chain",
+    "_google_news_rss",
+    "_normalize_article",
     "_news_all",
 ]

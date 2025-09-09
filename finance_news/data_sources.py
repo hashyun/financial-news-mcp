@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 import feedparser
@@ -84,19 +85,21 @@ def _fetch_yahoo_chart(symbol: str, range_: str = "1mo", interval: str = "1d") -
         raise RuntimeError("no_data_for_symbol")
     ts = result.get("timestamp", []) or []
     quote = (result.get("indicators", {}).get("quote") or [{}])[0]
+    opens = quote.get("open") or []
+    highs = quote.get("high") or []
+    lows = quote.get("low") or []
+    closes_arr = quote.get("close") or []
+    vols = quote.get("volume") or []
     prices = []
     for i, t in enumerate(ts):
-        def _g(k):
-            arr = quote.get(k) or []
-            return arr[i] if i < len(arr) else None
         dt = datetime.fromtimestamp(t, tz=timezone.utc).isoformat()
         prices.append({
             "datetime": dt,
-            "open": _g("open"),
-            "high": _g("high"),
-            "low": _g("low"),
-            "close": _g("close"),
-            "volume": _g("volume"),
+            "open": opens[i] if i < len(opens) else None,
+            "high": highs[i] if i < len(highs) else None,
+            "low": lows[i] if i < len(lows) else None,
+            "close": closes_arr[i] if i < len(closes_arr) else None,
+            "volume": vols[i] if i < len(vols) else None,
         })
     closes = [p["close"] for p in prices if p["close"] is not None]
     change = None
@@ -129,6 +132,7 @@ def _yahoo_options_chain(symbol: str, expiration: Optional[str] = None) -> dict:
     return r.json()
 
 
+@lru_cache()
 def _load_feeds() -> List[dict]:
     import yaml
 
