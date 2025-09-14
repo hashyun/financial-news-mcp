@@ -162,7 +162,11 @@ def _normalize_article(source_name: str, entry: dict) -> dict:
 
 def _google_news_rss(query: str, lang: str = "ko", region: str = "KR") -> List[dict]:
     url = f"https://news.google.com/rss/search?q={query}&hl={lang}&gl={region}&ceid={region}:{lang}"
-    feed = feedparser.parse(url)
+    try:
+        r = _http_get(url, timeout=20)
+        feed = feedparser.parse(r.text)
+    except Exception:
+        return []
     out: List[dict] = []
     for e in feed.entries:
         out.append(_normalize_article("Google News", e))
