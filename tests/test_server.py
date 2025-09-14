@@ -1,5 +1,8 @@
 import pytest
 import server
+from types import SimpleNamespace
+from dateutil import parser as dateparser
+import finance_news.data_sources as data_sources
 
 
 class DummyResp:
@@ -74,3 +77,42 @@ def test_normalize_article():
     assert res["summary"] == "Hello World"
     assert res["link"] == "http://example.com"
     assert res["published"] == "2024-01-01T00:00:00+00:00"
+
+
+def test_yahoo_options_chain(monkeypatch):
+    data = {"optionChain": {"result": [{"expirationDates": [1, 2]}]}}
+    captured = {}
+
+    def fake_get(url, *, params=None, timeout=30):
+        captured["params"] = params
+        return DummyResp(json_data=data)
+
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
+    res = server._yahoo_options_chain("AAPL", expiration="2024-01-01")
+    assert res == data
+    expected = int(dateparser.parse("2024-01-01").timestamp())
+    assert captured["params"]["date"] == expected
+
+
+def test_fred_fetch(monkeypatch):
+    def fake_get(url, *, params=None, timeout=30):
+        return DummyResp(json_data={"id": params["series_id"]})
+
+    monkeypatch.setenv("FRED_API_KEY", "key")
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
+    args = SimpleNamespace(series_ids=["S1", "S2"], start=None, end=None, frequency=None, aggregation_method=None)
+    res = server._fred_fetch(args)
+    assert res["S1"]["id"] == "S1"
+    assert res["S2"]["id"] == "S2"
+
+
+def test_dart_filings(monkeypatch):
+    data = {"status": "013", "list": []}
+
+    def fake_get(url, *, params=None, timeout=30):
+        return DummyResp(json_data=data)
+
+    monkeypatch.setenv("DART_API_KEY", "key")
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
+    res = server._dart_filings(corp_code="12345678", page_count=5)
+    assert res["status"] == "013"

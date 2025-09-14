@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from pydantic import BaseModel, Field
 from mcp.server.fastmcp import FastMCP
 
-from .data_sources import _fetch_yahoo_chart, _news_all
+from .data_sources import (
+    _fetch_yahoo_chart,
+    _news_all,
+    _yahoo_options_chain,
+    _fred_fetch,
+    _dart_filings,
+)
 
 logger = logging.getLogger("finance-mcp")
 
@@ -32,4 +38,58 @@ def latest_news(limit: int = 10) -> Dict[str, Any]:
     return {"items": items}
 
 
-__all__ = ["app", "fetch_chart", "latest_news"]
+class OptionsArgs(BaseModel):
+    symbol: str = Field(..., description="Ticker symbol")
+    expiration: Optional[str] = Field(None, description="Expiration date (YYYY-MM-DD)")
+
+
+@app.tool()
+def options_chain(args: OptionsArgs) -> Dict[str, Any]:
+    """Fetch options chain data for a symbol."""
+    return _yahoo_options_chain(args.symbol, args.expiration)
+
+
+class FREDArgs(BaseModel):
+    series_ids: List[str] = Field(..., description="List of FRED series IDs")
+    start: Optional[str] = Field(None, description="Observation start date (YYYY-MM-DD)")
+    end: Optional[str] = Field(None, description="Observation end date (YYYY-MM-DD)")
+    frequency: Optional[str] = Field(None, description="Data frequency (e.g., m for monthly)")
+    aggregation_method: Optional[str] = Field(
+        None, description="Aggregation method", alias="aggregation_method"
+    )
+
+
+@app.tool()
+def fred_series(args: FREDArgs) -> Dict[str, Any]:
+    """Fetch economic data series from FRED."""
+    return _fred_fetch(args)
+
+
+class DartArgs(BaseModel):
+    corp_name: Optional[str] = Field(None, description="Company name")
+    corp_code: Optional[str] = Field(None, description="DART corporation code")
+    bgn_de: Optional[str] = Field(None, description="Begin date (YYYYMMDD)")
+    end_de: Optional[str] = Field(None, description="End date (YYYYMMDD)")
+    page_count: int = Field(10, description="Number of results")
+
+
+@app.tool()
+def dart_filings(args: DartArgs) -> Dict[str, Any]:
+    """Fetch recent filings from the Korean DART system."""
+    return _dart_filings(
+        corp_name=args.corp_name,
+        corp_code=args.corp_code,
+        bgn_de=args.bgn_de,
+        end_de=args.end_de,
+        page_count=args.page_count,
+    )
+
+
+__all__ = [
+    "app",
+    "fetch_chart",
+    "latest_news",
+    "options_chain",
+    "fred_series",
+    "dart_filings",
+]
