@@ -19,10 +19,11 @@ MCP server exposing finance/news tools: RSS aggregation, Yahoo Finance charts, F
 ### Web UI (optional)
 - Start the web server:
   ```powershell
-  python web/app.py
+  python web/app.py  # or: python -m web.app
   ```
 - Open http://127.0.0.1:8000 in your browser.
 - Click preset buttons (코스피, 코스닥, 글로벌) for quick summaries, or use the category + keyword search to analyze a specific market (e.g., 커피/환율/삼성전자).
+- **Troubleshooting**: If you encounter `ModuleNotFoundError: finance_news`, ensure you're running from the repository root or use `python -m web.app`.
 
 Notes:
 - The server uses retries and short-lived caching (requests-cache, ~180s) for resilience.

@@ -1,6 +1,12 @@
 from fastapi.testclient import TestClient
 import web.app as webapp
 
+import subprocess
+import sys
+import time
+=======
+
+
 
 def test_preset_kospi(monkeypatch):
     def fake_news(query, lang="ko", region="KR"):
@@ -36,3 +42,18 @@ def test_analyze(monkeypatch):
     assert data["symbol"] == "^KS11"
     assert data["chart"]["symbol"] == "^KS11"
     assert data["news"][0]["title"] == "n"
+
+
+
+def test_app_script_starts_without_import_error():
+    proc = subprocess.Popen([sys.executable, "web/app.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        time.sleep(1)
+        proc.terminate()
+        stdout, stderr = proc.communicate(timeout=3)
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+    assert b"ModuleNotFoundError" not in stderr
+=======
+
