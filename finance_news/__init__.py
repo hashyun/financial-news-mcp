@@ -11,6 +11,8 @@ from .data_sources import (
     _google_news_rss,
     _normalize_article,
     _news_all,
+    _fred_fetch,
+    _dart_filings,
 )
 from .tools import app
 
@@ -27,4 +29,6 @@ __all__ = [
     "_google_news_rss",
     "_normalize_article",
     "_news_all",
+    "_fred_fetch",
+    "_dart_filings",
 ]
