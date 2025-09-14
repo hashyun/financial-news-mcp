@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+
 import os
 import sys
 from fastapi import FastAPI, HTTPException
@@ -9,6 +10,11 @@ from fastapi.responses import HTMLResponse
 
 # allow running `python web/app.py` without PYTHONPATH tweaks
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+=======
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+
 
 from finance_news import (
     _fetch_yahoo_chart,
