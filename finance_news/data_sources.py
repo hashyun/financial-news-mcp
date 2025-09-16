@@ -179,7 +179,8 @@ def _fetch_feed(source: dict) -> List[dict]:
     if not url:
         return []
     try:
-        feed = feedparser.parse(url)
+        resp = _http_get(url, timeout=20)
+        feed = feedparser.parse(resp.text)
     except Exception:
         return []
     items: List[dict] = []

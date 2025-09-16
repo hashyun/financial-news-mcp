@@ -3,6 +3,7 @@ import server
 from types import SimpleNamespace
 from dateutil import parser as dateparser
 import finance_news.data_sources as data_sources
+import finance_news.network as network
 
 
 class DummyResp:
@@ -116,3 +117,60 @@ def test_dart_filings(monkeypatch):
     monkeypatch.setattr(data_sources, "_http_get", fake_get)
     res = server._dart_filings(corp_code="12345678", page_count=5)
     assert res["status"] == "013"
+
+
+def test_http_get_rejects_non_https():
+    with pytest.raises(ValueError) as exc:
+        network._http_get("http://query1.finance.yahoo.com/test")
+    assert "https_required" in str(exc.value)
+
+
+def test_http_get_rejects_unknown_host(monkeypatch):
+    monkeypatch.setattr(network, "STRICT_SECURITY", True)
+    with pytest.raises(ValueError) as exc:
+        network._http_get("https://example.com/path")
+    assert "host_not_allowed" in str(exc.value)
+
+
+def test_http_get_allows_known_host(monkeypatch):
+    captured = {}
+
+    def fake_get(url, *, params=None, timeout=30):
+        captured["url"] = url
+        return DummyResp(json_data={"ok": True})
+
+    monkeypatch.setattr(network, "STRICT_SECURITY", True)
+    monkeypatch.setattr(network.SESSION, "get", fake_get)
+    resp = network._http_get("https://query1.finance.yahoo.com/v8")
+    assert resp.json()["ok"] is True
+    assert captured["url"].startswith("https://query1.finance.yahoo.com")
+
+
+def test_http_get_can_be_relaxed(monkeypatch):
+    def fake_get(url, *, params=None, timeout=30):
+        return DummyResp(json_data={"ok": True})
+
+    monkeypatch.setattr(network, "STRICT_SECURITY", False)
+    monkeypatch.setattr(network.SESSION, "get", fake_get)
+    resp = network._http_get("https://example.com/data")
+    assert resp.json()["ok"] is True
+
+
+def test_fetch_feed_uses_secured_http(monkeypatch):
+    rss = (
+        "<rss version='2.0'><channel>"
+        "<item><title>T1</title><link>https://example.com/1</link><description>Desc</description>"
+        "<pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item>"
+        "</channel></rss>"
+    )
+
+    captured = {}
+
+    def fake_get(url, timeout=20):
+        captured["url"] = url
+        return DummyResp(text_data=rss)
+
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
+    items = data_sources._fetch_feed({"name": "Reuters", "url": "https://feeds.reuters.com/reuters/marketsNews"})
+    assert captured["url"].startswith("https://feeds.reuters.com")
+    assert items[0]["source"] == "Reuters"
