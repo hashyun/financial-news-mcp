@@ -34,14 +34,14 @@ The project intentionally ships **without** any HTTP web application.  All inter
 3. Add an entry similar to the snippet below:
    ```json
    {
-     "mcpServers": [
+     "mcpServers": {
        {
          "name": "finance-news",
          "command": "python",
          "args": ["/absolute/path/to/server.py"],
          "description": "Secure finance news and market data tools"
        }
-     ]
+     }
    }
    ```
 4. Restart Claude Desktop.  The tool palette will now expose the MCP tools for prompts such as “최근 코스피 동향 분석해줘” or “삼성전자 공시 찾아줘”.
