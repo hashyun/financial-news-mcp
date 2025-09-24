@@ -12,6 +12,7 @@ from .data_sources import (
     _normalize_article,
     _news_all,
     _fred_fetch,
+    _ecos_fetch,
     _dart_filings,
 )
 from .tools import app
@@ -30,5 +31,6 @@ __all__ = [
     "_normalize_article",
     "_news_all",
     "_fred_fetch",
+    "_ecos_fetch",
     "_dart_filings",
 ]
