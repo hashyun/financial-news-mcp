@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from dateutil import parser as dateparser
 import finance_news.data_sources as data_sources
 import finance_news.network as network
+import finance_news.tools as tools
 
 
 class DummyResp:
@@ -39,7 +40,7 @@ def test_fetch_yahoo_chart(monkeypatch):
     }
     def fake_get(url, *, params=None, timeout=30):
         return DummyResp(json_data=data)
-    monkeypatch.setattr(server, "_http_get", fake_get)
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
     res = server._fetch_yahoo_chart("TEST", range_="1d", interval="1h")
     assert res["symbol"] == "TEST"
     assert len(res["points"]) == 2
@@ -57,12 +58,21 @@ def test_google_news_rss(monkeypatch):
     )
     def fake_get(url, *, params=None, timeout=20):
         return DummyResp(text_data=rss)
-    monkeypatch.setattr(server, "_http_get", fake_get)
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
     items = server._google_news_rss("apple", lang="en", region="US")
     assert len(items) == 2
-    assert items[0]["source"] == "GoogleNews"
+    assert items[0]["source"] == "Google News"
     assert items[0]["title"] == "T1"
     assert items[1]["link"] == "http://ex/2"
+
+
+def test_google_news_rss_handles_errors(monkeypatch):
+    def fake_get(url, *, params=None, timeout=20):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(data_sources, "_http_get", fake_get)
+    items = server._google_news_rss("apple")
+    assert items == []
 
 
 def test_normalize_article():
@@ -105,6 +115,36 @@ def test_fred_fetch(monkeypatch):
     res = server._fred_fetch(args)
     assert res["S1"]["id"] == "S1"
     assert res["S2"]["id"] == "S2"
+
+
+def test_ecos_series_forwards_args(monkeypatch):
+    captured = {}
+
+    def fake_fetch(args):
+        captured["stat_code"] = args.stat_code
+        captured["item_code2"] = args.item_code2
+        return {"ok": True}
+
+    monkeypatch.setattr(tools, "_ecos_fetch", fake_fetch)
+    args = tools.EcosArgs(
+        stat_code="722Y001",
+        start="20200101",
+        end="20200201",
+        cycle="M",
+        item_code1="A",
+        item_code2="B",
+    )
+    res = tools.ecos_series(args)
+    assert res == {"ok": True}
+    assert captured["stat_code"] == "722Y001"
+    assert captured["item_code2"] == "B"
+
+
+def test_ecos_series_missing_api_key(monkeypatch):
+    monkeypatch.delenv("BOK_API_KEY", raising=False)
+    args = tools.EcosArgs(stat_code="722Y001", start="20200101", end="20200201", cycle="M")
+    res = tools.ecos_series(args)
+    assert res == {"error": "missing_api_key", "env": "BOK_API_KEY"}
 
 
 def test_dart_filings(monkeypatch):

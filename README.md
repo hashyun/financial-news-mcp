@@ -66,6 +66,7 @@ For regulated deployments, keep the process on an isolated host, restrict outbou
 | `latest_news` | Returns the newest deduplicated articles from configured RSS feeds.        |
 | `options_chain` | Yahoo Finance options chain with optional expiration filtering.         |
 | `fred_series` | Pulls FRED economic time series (requires `FRED_API_KEY`).                 |
+| `ecos_series` | Retrieves Bank of Korea ECOS macro series (requires `BOK_API_KEY`).        |
 | `dart_filings` | Queries OpenDART filings or falls back to Google News coverage.          |
 
 Invoke these tools directly from Claude Desktop’s tool inspector or embed them in saved prompts for analysts.

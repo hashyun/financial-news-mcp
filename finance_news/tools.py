@@ -11,6 +11,7 @@ from .data_sources import (
     _news_all,
     _yahoo_options_chain,
     _fred_fetch,
+    _ecos_fetch,
     _dart_filings,
 )
 
@@ -65,6 +66,22 @@ def fred_series(args: FREDArgs) -> Dict[str, Any]:
     return _fred_fetch(args)
 
 
+class EcosArgs(BaseModel):
+    stat_code: str = Field(..., description="ECOS statistic code (e.g., 722Y001)")
+    start: str = Field(..., description="Start period (YYYYMM or YYYY) depending on cycle")
+    end: str = Field(..., description="End period (YYYYMM or YYYY) depending on cycle")
+    cycle: str = Field(..., description="Data cycle (e.g., D, M, Q, Y)")
+    item_code1: Optional[str] = Field(None, description="First item code filter")
+    item_code2: Optional[str] = Field(None, description="Second item code filter")
+    item_code3: Optional[str] = Field(None, description="Third item code filter")
+
+
+@app.tool()
+def ecos_series(args: EcosArgs) -> Dict[str, Any]:
+    """Fetch macroeconomic time series from the Bank of Korea ECOS API."""
+    return _ecos_fetch(args)
+
+
 class DartArgs(BaseModel):
     corp_name: Optional[str] = Field(None, description="Company name")
     corp_code: Optional[str] = Field(None, description="DART corporation code")
@@ -91,5 +108,6 @@ __all__ = [
     "latest_news",
     "options_chain",
     "fred_series",
+    "ecos_series",
     "dart_filings",
 ]
