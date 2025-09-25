@@ -2,9 +2,14 @@
   "name": "financial_news_tool",
   "description": "Provides access to financial market data including news, stock prices, economic indicators, and corporate filings.",
   "version": "1.0.0",
-  "author": "hashyun",
-  "server": {
-    "command": "python",
-    "args": ["server.py"]
-  }
+  "author": {
+    "name": "hashyun"
+  },
+  "servers": [
+    {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["server.py"]
+    }
+  ]
 }
