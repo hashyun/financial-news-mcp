@@ -1,0 +1,6 @@
+{
+  "name": "financial_news_tool",
+  "description": "Provides access to financial market data including news, stock prices, economic indicators, and corporate filings.",
+  "version": "1.0.0",
+  "api_version": "1.0"
+}
