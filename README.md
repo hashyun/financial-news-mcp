@@ -15,10 +15,18 @@ A locked-down Model Context Protocol (MCP) server that aggregates finance headli
    ```bash
    pip install -r requirements.txt
    ```
-3. Export API keys only if you need premium data (all optional):
-   - `export DART_API_KEY="<YOUR_KEY>"`
-   - `export FRED_API_KEY="<YOUR_KEY>"`
-   - `export BOK_API_KEY="<YOUR_KEY>"`
+3. Set up API keys only if you need premium data (all optional). You can either:
+   - **Option A (Recommended)**: Create a `.env` file in the project root:
+     ```bash
+     cp .env.example .env
+     # Edit .env file with your actual API keys
+     ```
+   - **Option B**: Export environment variables:
+     ```bash
+     export DART_API_KEY="<YOUR_KEY>"
+     export FRED_API_KEY="<YOUR_KEY>"
+     export BOK_API_KEY="<YOUR_KEY>"
+     ```
 4. Launch the MCP server:
    ```bash
    python server.py
@@ -75,6 +83,8 @@ All integrations work without keys, but supplying them unlocks richer datasets:
 - `DART_API_KEY` – OpenDART filings.
 - `FRED_API_KEY` – U.S. Federal Reserve economic series.
 - `BOK_API_KEY` – Bank of Korea ECOS macro data.
+
+**Recommended approach**: Create a `.env` file in the project root (copy from `.env.example`) to securely manage your API keys. The server automatically loads environment variables from this file using `python-dotenv`.
 
 ## Example analyst prompts
 - “코스피 최근 한 달 추세와 거래량을 알려줘” → Claude calls `fetch_chart` for `^KS11`.
