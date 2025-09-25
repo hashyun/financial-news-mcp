@@ -47,6 +47,11 @@ The project intentionally ships **without** any HTTP web application.  All inter
          "command": "python",
          "args": ["/absolute/path/to/server.py"],
          "description": "Secure finance news and market data tools"
+         "env": {
+        "FRED_API_KEY": "여기에_FRED키",
+        "BOK_API_KEY": "여기에_BOK키",
+        "DART_API_KEY": "여기에_DART키"
+      }   
        }
      }
    }
