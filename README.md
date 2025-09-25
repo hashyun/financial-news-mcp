@@ -35,8 +35,7 @@ The project intentionally ships **without** any HTTP web application.  All inter
    ```json
    {
      "mcpServers": {
-       {
-         "name": "finance-news",
+       "finance-news": {
          "command": "python",
          "args": ["/absolute/path/to/server.py"],
          "description": "Secure finance news and market data tools"
