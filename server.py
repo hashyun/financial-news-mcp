@@ -1,8 +1,4 @@
-from dotenv import load_dotenv
 
-# .env 파일에 정의된 환경 변수를 불러옵니다.
-# 이 코드는 다른 import 구문들보다 먼저 실행되어야 합니다.
-load_dotenv()
 
 from finance_news import (
     app,
