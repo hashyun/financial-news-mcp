@@ -79,8 +79,14 @@ Claude Desktop 설정 파일을 열어 MCP 서버를 등록합니다:
   "mcpServers": {
     "finance-news": {
       "command": "python",
-      "args": ["C:\\mcp\\financial-news-mcp\\server.py"],
-      "description": "금융 데이터 분석 MCP 서버"
+      "args": ["Your path\\server.py"],
+      "description": "금융 데이터 분석 MCP 서버",
+	  "env":{
+		  "FRED_API_KEY":"Enter API KEY",
+		  "BOK_API_KEY":"Enter API KEY",
+		  "DART_API_KEY":"Enter API KEY"
+
+	  }
     }
   }
 }
@@ -172,5 +178,4 @@ EQUITY_MAP = {
   - `FINANCE_NEWS_ALLOWED_HOSTS="host1,host2"` (추가 호스트 허용)
 
 ## 📝 라이선스 및 주의사항
-이 프로젝트는 금융권 환경에서도 안전하게 사용할 수 있도록 설계되었습니다.
 API 키는 반드시 `.env` 파일에 저장하고 외부에 노출되지 않도록 주의하세요.
