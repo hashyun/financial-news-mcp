@@ -259,6 +259,190 @@ def _ecos_fetch(args) -> dict:
         return {"error": str(e), "url": url}
 
 
+INDUSTRY_MAP = {
+    "반도체": ["삼성전자", "SK하이닉스", "DB하이텍", "SK스퀘어"],
+    "화장품": ["아모레퍼시픽", "LG생활건강", "코스맥스", "한국콜마"],
+    "자동차": ["현대차", "기아", "현대모비스", "삼성SDI"],
+    "배터리": ["LG에너지솔루션", "삼성SDI", "SK이노베이션", "에코프로비엠"],
+    "바이오": ["삼성바이오로직스", "셀트리온", "SK바이오팜", "유한양행"],
+    "금융": ["KB금융", "신한지주", "하나금융지주", "우리금융지주"],
+    "화학": ["LG화학", "롯데케미칼", "한화솔루션", "SK케미칼"],
+    "제약": ["셀트리온", "삼성바이오로직스", "녹십자", "한미약품"],
+    "건설": ["삼성물산", "현대건설", "GS건설", "대림산업"],
+    "유통": ["신세계", "롯데쇼핑", "현대백화점", "이마트"],
+}
+
+
+def _dart_corp_code_lookup(corp_name: str) -> Optional[str]:
+    """기업명으로 DART corp_code 검색 (간단한 매핑, 실제로는 DART API의 corpCode.xml 활용)"""
+    # 기업명 -> corp_code 매핑 (일부 예시)
+    code_map = {
+        "삼성전자": "00126380",
+        "SK하이닉스": "00164779",
+        "현대차": "00164742",
+        "LG에너지솔루션": "00222417",
+        "삼성바이오로직스": "00196539",
+        "셀트리온": "00184454",
+        "아모레퍼시픽": "00111903",
+        "LG생활건강": "00173084",
+        "네이버": "00139459",
+        "카카오": "00190321",
+        "KB금융": "00164359",
+        "삼성SDI": "00126912",
+        "기아": "00164529",
+    }
+    return code_map.get(corp_name)
+
+
+def _dart_financial_statement(corp_code: str, year: int, report_code: str = "11011") -> dict:
+    """
+    DART API로 재무제표 조회
+    report_code: 11011(사업보고서), 11012(반기보고서), 11013(1분기), 11014(3분기)
+    """
+    api_key = os.getenv("DART_API_KEY")
+    if not api_key:
+        return {"error": "missing_api_key"}
+
+    base = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json"
+    params = {
+        "crtfc_key": api_key,
+        "corp_code": corp_code,
+        "bsns_year": str(year),
+        "reprt_code": report_code,
+        "fs_div": "CFS",  # 연결재무제표
+    }
+
+    try:
+        r = _http_get(base, params=params, timeout=30)
+        return r.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def _analyze_financial_health(fs_data: dict) -> dict:
+    """
+    재무제표 데이터에서 주요 지표 추출 및 건전성 평가
+    ROE, 부채비율, 당좌비율, 매출액증가율 등
+    """
+    if "error" in fs_data or fs_data.get("status") != "000":
+        return {"healthy": False, "reason": "no_data"}
+
+    items = fs_data.get("list", [])
+    if not items:
+        return {"healthy": False, "reason": "empty_data"}
+
+    # 계정과목 추출 헬퍼
+    def find_account(account_name: str) -> Optional[float]:
+        for item in items:
+            if item.get("account_nm") == account_name:
+                try:
+                    return float(item.get("thstrm_amount", "0").replace(",", ""))
+                except:
+                    return None
+        return None
+
+    # 주요 계정과목
+    total_assets = find_account("자산총계")
+    total_liabilities = find_account("부채총계")
+    equity = find_account("자본총계")
+    revenue = find_account("매출액")
+    net_income = find_account("당기순이익")
+    current_assets = find_account("유동자산")
+    current_liabilities = find_account("유동부채")
+
+    metrics = {}
+    score = 0
+    max_score = 0
+
+    # ROE (자기자본이익률) - 10% 이상이면 양호
+    if equity and net_income and equity > 0:
+        roe = (net_income / equity) * 100
+        metrics["ROE"] = round(roe, 2)
+        max_score += 1
+        if roe >= 10:
+            score += 1
+
+    # 부채비율 - 150% 이하면 양호
+    if total_liabilities and equity and equity > 0:
+        debt_ratio = (total_liabilities / equity) * 100
+        metrics["부채비율"] = round(debt_ratio, 2)
+        max_score += 1
+        if debt_ratio <= 150:
+            score += 1
+
+    # 유동비율 - 150% 이상이면 양호
+    if current_assets and current_liabilities and current_liabilities > 0:
+        current_ratio = (current_assets / current_liabilities) * 100
+        metrics["유동비율"] = round(current_ratio, 2)
+        max_score += 1
+        if current_ratio >= 150:
+            score += 1
+
+    # 매출액 (단위: 억원)
+    if revenue:
+        metrics["매출액"] = round(revenue / 100000000, 0)
+
+    # 당기순이익 (단위: 억원)
+    if net_income:
+        metrics["당기순이익"] = round(net_income / 100000000, 0)
+
+    # 건전성 판단 (2/3 이상 기준 통과)
+    healthy = score >= (max_score * 2 / 3) if max_score > 0 else False
+
+    return {
+        "healthy": healthy,
+        "score": f"{score}/{max_score}",
+        "metrics": metrics,
+    }
+
+
+def _get_industry_recommendations(industry: str, year: int = 2023, top_n: int = 3) -> dict:
+    """
+    산업군별 재무제표 기반 우량 기업 추천
+    """
+    if industry not in INDUSTRY_MAP:
+        return {
+            "error": "industry_not_found",
+            "available": list(INDUSTRY_MAP.keys()),
+        }
+
+    corp_names = INDUSTRY_MAP[industry]
+    results = []
+
+    for corp_name in corp_names:
+        corp_code = _dart_corp_code_lookup(corp_name)
+        if not corp_code:
+            continue
+
+        # 재무제표 조회
+        fs_data = _dart_financial_statement(corp_code, year)
+
+        # 재무 건전성 분석
+        analysis = _analyze_financial_health(fs_data)
+
+        results.append({
+            "corp_name": corp_name,
+            "corp_code": corp_code,
+            "analysis": analysis,
+        })
+
+    # 건전성 점수로 정렬
+    results.sort(
+        key=lambda x: (
+            x["analysis"].get("healthy", False),
+            float(x["analysis"].get("score", "0/1").split("/")[0])
+        ),
+        reverse=True
+    )
+
+    return {
+        "industry": industry,
+        "year": year,
+        "recommendations": results[:top_n],
+        "all_companies": results,
+    }
+
+
 def _dart_filings(
     corp_name: Optional[str] = None,
     corp_code: Optional[str] = None,
@@ -294,6 +478,7 @@ __all__ = [
     "FX_ALIAS",
     "INDEX_MAP",
     "EQUITY_MAP",
+    "INDUSTRY_MAP",
     "_normalize_kw",
     "_html_to_text",
     "_fetch_yahoo_chart",
@@ -306,4 +491,8 @@ __all__ = [
     "_fred_fetch",
     "_ecos_fetch",
     "_dart_filings",
+    "_dart_corp_code_lookup",
+    "_dart_financial_statement",
+    "_analyze_financial_health",
+    "_get_industry_recommendations",
 ]

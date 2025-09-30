@@ -14,6 +14,7 @@ from finance_news import (
     _fred_fetch,
     _ecos_fetch,
     _dart_filings,
+    _get_industry_recommendations,
 )
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "_fred_fetch",
     "_ecos_fetch",
     "_dart_filings",
+    "_get_industry_recommendations",
 ]
 
 

@@ -6,6 +6,7 @@ from .data_sources import (
     FX_ALIAS,
     INDEX_MAP,
     EQUITY_MAP,
+    INDUSTRY_MAP,
     _fetch_yahoo_chart,
     _yahoo_options_chain,
     _google_news_rss,
@@ -14,6 +15,7 @@ from .data_sources import (
     _fred_fetch,
     _ecos_fetch,
     _dart_filings,
+    _get_industry_recommendations,
 )
 from .tools import app
 
@@ -25,6 +27,7 @@ __all__ = [
     "FX_ALIAS",
     "INDEX_MAP",
     "EQUITY_MAP",
+    "INDUSTRY_MAP",
     "_fetch_yahoo_chart",
     "_yahoo_options_chain",
     "_google_news_rss",
@@ -33,4 +36,5 @@ __all__ = [
     "_fred_fetch",
     "_ecos_fetch",
     "_dart_filings",
+    "_get_industry_recommendations",
 ]
