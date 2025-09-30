@@ -79,7 +79,7 @@ Claude Desktop 설정 파일을 열어 MCP 서버를 등록합니다:
   "mcpServers": {
     "finance-news": {
       "command": "python",
-      "args": ["Your path\\server.py"],
+      "args": ["Your path for server.py"],
       "description": "금융 데이터 분석 MCP 서버",
 	  "env":{
 		  "FRED_API_KEY":"Enter API KEY",
